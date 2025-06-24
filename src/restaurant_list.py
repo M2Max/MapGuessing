@@ -13,69 +13,51 @@ KEYWORDS = ["agriturismo", "osteria", "hosteria", "trattoria", "podere", "locand
 PAUSE_BETWEEN_REQUESTS = 2.0  # Seconds pause to respect rate limits
 
 
-def get_nearby_places(api_key, location, radius, place_type, keyword=None, page_token=None):
-    """
-    Call the Google Places Nearby Search API to get places, optionally filtered by a keyword.
+class GoogleMapsClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
 
-    :param api_key: Your Google Maps API key
-    :param location: "lat,lng" string
-    :param radius: Search radius in meters
-    :param place_type: Place type, e.g., 'restaurant'
-    :param keyword: Optional keyword to filter places by
-    :param page_token: Token for next page of results
-    :return: JSON response
-    """
-    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-    params = {
-        "key": api_key,
-        "location": location,
-        "radius": radius,
-        "type": place_type,
-    }
-    if keyword:
-        params["keyword"] = keyword
-    if page_token:
-        params["pagetoken"] = page_token
-
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    return response.json()
+    def get(self, url, params):
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
 
 
-def fetch_restaurants_by_keywords(api_key, lat, lng, radius, place_type, keywords):
-    """
-    Retrieve restaurants for each keyword via API and deduplicate by place_id.
+class PlaceSearcher:
+    def __init__(self, api_key):
+        self.client = GoogleMapsClient(api_key)
+        self.place_type = "restaurant"
+        self.keywords = ["agriturismo", "osteria", "hosteria", "trattoria", "podere", "locanda", ""]
 
-    :param api_key: Your Google Maps API key
-    :param lat: Latitude of center point
-    :param lng: Longitude of center point
-    :param radius: Search radius in meters
-    :param place_type: Place type, e.g., 'restaurant'
-    :param keywords: List of keywords to include in API requests
-    :return: List of unique places
-    """
-    location = f"{lat},{lng}"
-    unique_places = {}
-
-    for keyword in keywords:
-        next_page_token = None
-        while True:
-            result = get_nearby_places(
-                api_key, location, radius, place_type,
-                keyword=keyword, page_token=next_page_token
-            )
-            for place in result.get("results", []):
-                place_id = place.get("place_id")
-                if place_id and place_id not in unique_places:
-                    unique_places[place_id] = place
-            next_page_token = result.get("next_page_token")
-            if not next_page_token:
-                break
-            time.sleep(PAUSE_BETWEEN_REQUESTS)
-        # Pause between different keyword requests as well
-        time.sleep(PAUSE_BETWEEN_REQUESTS)
-
-    return list(unique_places.values())
+    def search(self, lat, lng, radius):
+        all_places = {}
+        for keyword in self.keywords:
+            location = f"{lat},{lng}"
+            page_token = None
+            while True:
+                params = {
+                    "key": self.client.api_key,
+                    "location": location,
+                    "radius": radius,
+                    "type": self.place_type,
+                }
+                if keyword:
+                    params["keyword"] = keyword
+                if page_token:
+                    params["pagetoken"] = page_token
+                url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+                data = self.client.get(url, params)
+                for place in data.get("results", []):
+                    all_places[place["place_id"]] = {
+                        "name": place.get("name"),
+                        "address": place.get("vicinity"),
+                        "latitude": place["geometry"]["location"]["lat"],
+                        "longitude": place["geometry"]["location"]["lng"]
+                    }
+                page_token = data.get("next_page_token")
+                if not page_token:
+                    break
+        return list(all_places.values())
 
 
 def save_to_csv(places, filename):
@@ -103,15 +85,9 @@ def save_to_csv(places, filename):
 
 
 if __name__ == "__main__":
+    searcher = PlaceSearcher(API_KEY)
     print("Fetching restaurants by keywords... this may take a moment.")
-    restaurants = fetch_restaurants_by_keywords(
-        API_KEY,
-        LOCATION_LAT,
-        LOCATION_LNG,
-        RADIUS,
-        TYPE,
-        KEYWORDS
-    )
+    restaurants = searcher.search(LOCATION_LAT, LOCATION_LNG, RADIUS)
     print(f"Found {len(restaurants)} unique restaurants across keywords.")
     save_to_csv(restaurants, OUTPUT_CSV)
     print(f"Data saved to {OUTPUT_CSV}")

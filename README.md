@@ -94,6 +94,41 @@ MAX_DURATION_MIN = 25
 2. `distance_calculator.py` → reads `restaurants_nearby.csv` and creates `distances_output.csv`
 3. `filter_values.py` → reads `distances_output.csv` and outputs filtered results to console
 
+## New Graphical User Interface (GUI)
+
+A new graphical interface is available using Tkinter. This GUI allows you to:
+- Enter your Google Maps API key, center latitude/longitude, search diameter, and filter ranges
+- Search for places, calculate distances, and filter results with a single click
+- View results directly in the application
+
+### How to Run the GUI
+
+1. Make sure you have all dependencies installed (see below).
+2. Start the GUI with:
+   ```bash
+   .venv/bin/python gui.py
+   ```
+
+### GUI Features
+- All-in-one workflow: search, distance calculation, and filtering
+- User-friendly input fields for all parameters
+- Results displayed in a scrollable text area
+
+## Dependencies
+
+Install required packages in your virtual environment:
+```bash
+pip install requests tkinter
+```
+
+## Project Structure
+
+- `main.py` — Command-line interface for the full workflow
+- `gui.py` — Graphical user interface (Tkinter)
+- `src/restaurant_list.py` — Place search logic (OOP)
+- `src/distance_calculator.py` — Distance calculation logic (OOP)
+- `src/filter_values.py` — Filtering logic (OOP)
+
 ## Notes
 
 - Remember to respect Google Maps API usage limits

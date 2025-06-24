@@ -8,50 +8,68 @@ MIN_DURATION_MIN = 15
 MAX_DURATION_MIN = 25
 
 
-def parse_duration(duration_text):
-    """
-    Convert a duration string like '18 mins' or '1 hour 5 mins' to total minutes (int).
-    """
-    parts = duration_text.split()
-    total = 0
-    i = 0
-    while i < len(parts):
-        try:
-            value = int(parts[i])
-            unit = parts[i+1]
-            if unit.startswith('hour'):
-                total += value * 60
-            elif unit.startswith('min'):
-                total += value
-            i += 2
-        except (ValueError, IndexError):
-            i += 1
-    return total
+class PlaceFilter:
+    def __init__(self, min_distance_km, max_distance_km, min_duration_min, max_duration_min):
+        self.min_distance_km = min_distance_km
+        self.max_distance_km = max_distance_km
+        self.min_duration_min = min_duration_min
+        self.max_duration_min = max_duration_min
 
+    @staticmethod
+    def parse_duration(duration_text):
+        """
+        Convert a duration string like '18 mins' or '1 hour 5 mins' to total minutes (int).
+        """
+        parts = duration_text.split()
+        total = 0
+        i = 0
+        while i < len(parts):
+            try:
+                value = int(parts[i])
+                unit = parts[i+1]
+                if unit.startswith('hour'):
+                    total += value * 60
+                elif unit.startswith('min'):
+                    total += value
+                i += 2
+            except (ValueError, IndexError):
+                i += 1
+        return total
 
-def filter_places(input_csv):
-    """
-    Reads the input CSV, filters places by distance and duration, returns matching rows.
-    """
-    matches = []
-    with open(input_csv, newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
+    def filter(self, places):
+        """
+        Filter places by distance and duration.
+        """
+        matches = []
+        for row in places:
             try:
                 dist = float(row.get('distance_km', 0))
             except ValueError:
                 continue
             dur_text = row.get('duration_text', '')
-            duration_min = parse_duration(dur_text)
+            duration_min = self.parse_duration(dur_text)
 
-            if MIN_DISTANCE_KM <= dist <= MAX_DISTANCE_KM and MIN_DURATION_MIN <= duration_min <= MAX_DURATION_MIN:
+            if (self.min_distance_km <= dist <= self.max_distance_km and
+                self.min_duration_min <= duration_min <= self.max_duration_min):
                 matches.append({
                     'name': row.get('name'),
                     'address': row.get('address'),
                     'distance_km': dist,
                     'duration_text': dur_text
                 })
-    return matches
+        return matches
+
+
+def filter_places(input_csv):
+    """
+    Reads the input CSV, filters places by distance and duration, returns matching rows.
+    """
+    with open(input_csv, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        places = [row for row in reader]
+    
+    place_filter = PlaceFilter(MIN_DISTANCE_KM, MAX_DISTANCE_KM, MIN_DURATION_MIN, MAX_DURATION_MIN)
+    return place_filter.filter(places)
 
 
 def main():
