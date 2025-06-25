@@ -91,7 +91,12 @@ A modern web interface is available using Streamlit and Folium. This UI allows y
 
 ## Dependencies
 
-Install required packages in your virtual environment:
+Install all required packages in your virtual environment with:
+```bash
+pip install -r requirements.txt
+```
+
+Or, if you prefer, you can install them individually:
 ```bash
 pip install requests streamlit folium streamlit-folium
 ```
