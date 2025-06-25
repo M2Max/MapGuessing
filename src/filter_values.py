@@ -54,6 +54,10 @@ class PlaceFilter:
                 matches.append({
                     'name': row.get('name'),
                     'address': row.get('address'),
+                    'latitude': row.get('latitude'),
+                    'longitude': row.get('longitude'),
+                    'place_id': row.get('place_id'),
+                    'rating': row.get('rating'),
                     'distance_km': dist,
                     'duration_text': dur_text
                 })

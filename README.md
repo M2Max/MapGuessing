@@ -53,78 +53,53 @@ Filters the restaurants based on specific distance and duration criteria.
 
 ## Usage
 
-1. Set up your Google Maps API key in `restaurant_list.py` and `distance_calculator.py`
+### Command-Line Workflow
 
+1. Set up your Google Maps API key in `restaurant_list.py` and `distance_calculator.py`.
 2. Find restaurants in the area:
    ```bash
    python src/restaurant_list.py
    ```
-
 3. Calculate distances and travel times:
    ```bash
    python src/distance_calculator.py
    ```
-
 4. Filter results:
    ```bash
    python src/filter_values.py
    ```
 
-## Configuration
+### Web Interface (Recommended)
 
-You can modify the following parameters in the scripts:
-
-**restaurant_list.py:**
-```python
-RADIUS = 15000  # Search radius in meters
-KEYWORDS = ["agriturismo", "osteria", "hosteria", "trattoria", "podere", "locanda"]
-```
-
-**filter_values.py:**
-```python
-MIN_DISTANCE_KM = 11.5
-MAX_DISTANCE_KM = 12.5
-MIN_DURATION_MIN = 15
-MAX_DURATION_MIN = 25
-```
-
-## File Flow
-
-1. `restaurant_list.py` → creates `restaurants_nearby.csv`
-2. `distance_calculator.py` → reads `restaurants_nearby.csv` and creates `distances_output.csv`
-3. `filter_values.py` → reads `distances_output.csv` and outputs filtered results to console
-
-## New Graphical User Interface (GUI)
-
-A new graphical interface is available using Tkinter. This GUI allows you to:
+A modern web interface is available using Streamlit and Folium. This UI allows you to:
 - Enter your Google Maps API key, center latitude/longitude, search diameter, and filter ranges
 - Search for places, calculate distances, and filter results with a single click
-- View results directly in the application
+- View results as cards, each with a map and marker for the location
 
-### How to Run the GUI
+#### How to Run the Web UI
 
 1. Make sure you have all dependencies installed (see below).
-2. Start the GUI with:
+2. Start the web UI with:
    ```bash
-   .venv/bin/python gui.py
+   streamlit run webui.py
    ```
 
-### GUI Features
+#### Web UI Features
 - All-in-one workflow: search, distance calculation, and filtering
 - User-friendly input fields for all parameters
-- Results displayed in a scrollable text area
+- Results displayed as cards with interactive maps
 
 ## Dependencies
 
 Install required packages in your virtual environment:
 ```bash
-pip install requests tkinter
+pip install requests streamlit folium streamlit-folium
 ```
 
 ## Project Structure
 
 - `main.py` — Command-line interface for the full workflow
-- `gui.py` — Graphical user interface (Tkinter)
+- `webui.py` — Web user interface (Streamlit + Folium)
 - `src/restaurant_list.py` — Place search logic (OOP)
 - `src/distance_calculator.py` — Distance calculation logic (OOP)
 - `src/filter_values.py` — Filtering logic (OOP)

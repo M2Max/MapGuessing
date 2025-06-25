@@ -9,7 +9,7 @@ LOCATION_LNG = 123  # Example: longitude of the center point
 RADIUS = 15000  # in meters
 TYPE = "restaurant"  # Place type
 OUTPUT_CSV = "restaurants_nearby.csv"
-KEYWORDS = ["agriturismo", "osteria", "hosteria", "trattoria", "podere", "locanda", ""]  # Keywords to include in API calls
+KEYWORDS = ["agriturismo", "osteria", "hostaria", "trattoria", "podere", "locanda", "cantina", "ristorante", "pizzeria", ""]  # Keywords to include in API calls
 PAUSE_BETWEEN_REQUESTS = 2.0  # Seconds pause to respect rate limits
 
 
@@ -27,7 +27,10 @@ class PlaceSearcher:
     def __init__(self, api_key):
         self.client = GoogleMapsClient(api_key)
         self.place_type = "restaurant"
-        self.keywords = ["agriturismo", "osteria", "hosteria", "trattoria", "podere", "locanda", ""]
+        self.keywords = [
+            "agriturismo", "osteria", "hostaria", "trattoria", "podere", "locanda",
+            "cantina", "ristorante", "pizzeria", ""
+        ]
 
     def search(self, lat, lng, radius):
         all_places = {}
@@ -48,11 +51,18 @@ class PlaceSearcher:
                 url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
                 data = self.client.get(url, params)
                 for place in data.get("results", []):
+                    # Defensive: skip if lat/lng missing
+                    geometry = place.get("geometry", {})
+                    loc = geometry.get("location", {})
+                    lat_val = loc.get("lat")
+                    lng_val = loc.get("lng")
+                    if lat_val is None or lng_val is None:
+                        continue
                     all_places[place["place_id"]] = {
                         "name": place.get("name"),
                         "address": place.get("vicinity"),
-                        "latitude": place["geometry"]["location"]["lat"],
-                        "longitude": place["geometry"]["location"]["lng"]
+                        "latitude": lat_val,
+                        "longitude": lng_val
                     }
                 page_token = data.get("next_page_token")
                 if not page_token:
